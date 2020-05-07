@@ -17,7 +17,13 @@ namespace BerlinClock.Classes.TimeParser
 
         public LampTimeModel Parse(string rawTimestamp)
         {
-            // Please see solution.md for clarification on this bit.
+            // 24:00:00 is valid from the perspective of ISO-8601, but I would argue it is not a valid state for a clock dial:
+            // while for e.g. contractual time boundaries terms like "from 00:00:00 to 24:0:00" are used, they signify an interval,
+            // whereas clock dials only ever reflect instants.
+            // Ordinarily, I'd talk to business about this asap, as a spec like this indicates that I probably misunderstand the intent of the feature,
+            // and the faster I correct it, the better. In the context of a training exercise however, I'll settle for this comment.
+            // This is handled in this way, because once we've talked to business, either this bit of the spec goes away, or the intent is somewhat reimagined,
+            // and a partial rewrite is then needed either way.
             if (string.Equals(rawTimestamp, "24:00:00", StringComparison.InvariantCulture))
             {
                 return LampTimeModel.TwentyFourHourModel;
