@@ -25,6 +25,12 @@ namespace BerlinClock.Classes.TimeParser
 
         public LampTimeModel Parse(string rawTimestamp)
         {
+            // Please see solution.md clarification on this bit.
+            if (string.Equals(rawTimestamp, "24:00:00", StringComparison.InvariantCulture))
+            {
+                return LampTimeModel.TwentyFourHourModel;
+            }
+
             DateTime timestamp;
             try
             {
@@ -37,9 +43,9 @@ namespace BerlinClock.Classes.TimeParser
 
             var secondsAreEven = timestamp.Second % 2 == 0;
             var fiveHourLampCount = timestamp.Hour / 5;
-            var hourLampsCount = timestamp.Hour % fiveHourLampCount;
+            var hourLampsCount = timestamp.Hour - (fiveHourLampCount * 5);
             var fiveMinuteLampCount = timestamp.Minute / 5;
-            var minuteLampCount = timestamp.Minute % fiveMinuteLampCount;
+            var minuteLampCount = timestamp.Minute - (fiveMinuteLampCount * 5);
 
             var fiveHourArray = ConvertToLampArray(fiveHourLampCount, 4);
             var hourArray = ConvertToLampArray(hourLampsCount, 4);
@@ -76,7 +82,7 @@ namespace BerlinClock.Classes.TimeParser
         private static string BoolToColour(bool value, string colour) => value ? colour : OffColour;
         private string BoolToMinorColour(bool value) => BoolToColour(value, MinorColour);
         private string BoolToMajorColour(bool value) => BoolToColour(value, MajorColour);
-        private string BoolToQuarterColour(bool value, int i) => i % 3 == 0 ? BoolToMajorColour(value) : BoolToMinorColour(value);
+        private string BoolToQuarterColour(bool value, int i) => (i + 1) % 3 == 0 ? BoolToMajorColour(value) : BoolToMinorColour(value);
 
         public string MapToLampString(LampTimeModel model)
         {
@@ -84,16 +90,30 @@ namespace BerlinClock.Classes.TimeParser
 
             builder.AppendLine(BoolToMinorColour(model.SecondsAreEven));
 
-            builder.AppendLine(model.FiveHourLamps.Select(BoolToMajorColour).Aggregate(string.Join));
-            builder.AppendLine(model.HourLamps.Select(BoolToMajorColour).Aggregate(string.Join));
-            builder.AppendLine(model.FiveMinuteLamps.Select(BoolToQuarterColour).Aggregate(string.Join));
-            builder.AppendLine(model.MinuteLamps.Select(BoolToMinorColour).Aggregate(string.Join));
+            model.FiveHourLamps.Select(BoolToMajorColour).ToList().ForEach(el => builder.Append(el));
+            builder.AppendLine();
+            model.HourLamps.Select(BoolToMajorColour).ToList().ForEach(el => builder.Append(el));
+            builder.AppendLine();
+            model.FiveMinuteLamps.Select(BoolToQuarterColour).ToList().ForEach(el => builder.Append(el));
+            builder.AppendLine();
+            model.MinuteLamps.Select(BoolToMinorColour).ToList().ForEach(el => builder.Append(el));
 
             return builder.ToString();
         }
+
+        private static StringBuilder AppendBooleanTransform(StringBuilder sb, IEnumerable<bool> array, Func<bool, string> selector)
+        {
+            var sequence = array.Select(selector);
+            foreach (var element in sequence)
+            {
+                sb.Append(element);
+            }
+            sb.AppendLine();
+            return sb;
+        }
     }
 
-    public readonly struct LampTimeModel
+    public sealed class LampTimeModel
     {
         public bool SecondsAreEven { get; }
         public IEnumerable<bool> FiveHourLamps { get; }
@@ -110,5 +130,13 @@ namespace BerlinClock.Classes.TimeParser
             FiveMinuteLamps = fiveMinuteLamps;
             MinuteLamps = minuteLamps;
         }
+
+        // the 24:00:00 model represents an unclear business case, and, as such, is handled separately
+        public static LampTimeModel TwentyFourHourModel { get; } = new LampTimeModel(
+            true,
+            new[] { true, true, true, true },
+            new[] { true, true, true, true },
+            new[] { false, false, false, false, false, false, false, false, false, false, false },
+            new[] { false, false, false, false });
     }
 }
