@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,11 +15,11 @@ namespace BerlinClock.Classes.TimeParser
     internal sealed class TimeParser : ITimeParser
     {
         const string DefaultTimeFormat = "HH:mm:ss";
-        private static readonly string TimeFormat;
+        private readonly string TimeFormat;
 
-        public TimeParser(string timeFormat = TimeFormat)
+        public TimeParser(string timeFormat = DefaultTimeFormat)
         {
-            this.TimeFormat = timeFormat;
+            TimeFormat = timeFormat;
         }
 
 
@@ -34,11 +35,11 @@ namespace BerlinClock.Classes.TimeParser
                 throw new InvalidOperationException($"Couldn't parse the timestamp. Expected format is {TimeFormat}", ex);
             }
 
-            var secondsAreEven = timestamp.Seconds % 2;
-            var fiveHourLampCount = timestamp.Hours / 5;
-            var hourLampsCount = timestamp.Hours % fiveHourLampCount;
-            var fiveMinuteLampCount = timestamp.Minutes / 5;
-            var minuteLampCount = timestamp.Minutes % fiveMinuteLampCount;
+            var secondsAreEven = timestamp.Second % 2 == 0;
+            var fiveHourLampCount = timestamp.Hour / 5;
+            var hourLampsCount = timestamp.Hour % fiveHourLampCount;
+            var fiveMinuteLampCount = timestamp.Minute / 5;
+            var minuteLampCount = timestamp.Minute % fiveMinuteLampCount;
 
             var fiveHourArray = ConvertToLampArray(fiveHourLampCount, 4);
             var hourArray = ConvertToLampArray(hourLampsCount, 4);
@@ -51,7 +52,7 @@ namespace BerlinClock.Classes.TimeParser
         private static ICollection<bool> ConvertToLampArray(int value, int totalCount)
         {
             var result = new bool[totalCount];
-            for (int i; i < value; i++)
+            for (int i = 0; i < value; i++)
             {
                 result[i] = true;
             }
@@ -61,41 +62,44 @@ namespace BerlinClock.Classes.TimeParser
 
     public interface IColourMapper
     {
+        string MinorColour { get; }
+        string MajorColour { get; }
         string MapToLampString(LampTimeModel model);
     }
 
     internal sealed class DefaultColourMapper : IColourMapper
     {
-        private static readonly string MainColour = "Y";
-        private static readonly string QuarterColour = "R";
+        private const string OffColour = "O";
+        public string MinorColour { get; } = "Y";
+        public string MajorColour { get; } = "R";
 
-        private static string BoolToColour(bool value, string colour = MainColour) => value && colour;
-
-        private static string BoolToQuarterColour(bool value, int position) => i % 3 == 0 ? BoolToColour(value, QuarterColour) : BoolToColour(value);
+        private static string BoolToColour(bool value, string colour) => value ? colour : OffColour;
+        private string BoolToMinorColour(bool value) => BoolToColour(value, MinorColour);
+        private string BoolToMajorColour(bool value) => BoolToColour(value, MajorColour);
+        private string BoolToQuarterColour(bool value, int i) => i % 3 == 0 ? BoolToMajorColour(value) : BoolToMinorColour(value);
 
         public string MapToLampString(LampTimeModel model)
         {
             var builder = new StringBuilder();
 
-            builder.AppendLine(BoolToColour(model.SecondsAreEven));
-            builder.AppendLine(model.FiveHourLamps.Select(BoolToColour));
-            builder.AppendLine(model.HourLamps.Select(BoolToColour));
-            builder.AppendLine(FiveMinuteLamps.Select(BoolToQuarterColour));
-            builder.AppendLine(MinuteLamps.Select(BoolToColour));
+            builder.AppendLine(BoolToMinorColour(model.SecondsAreEven));
+
+            builder.AppendLine(model.FiveHourLamps.Select(BoolToMajorColour).Aggregate(string.Join));
+            builder.AppendLine(model.HourLamps.Select(BoolToMajorColour).Aggregate(string.Join));
+            builder.AppendLine(model.FiveMinuteLamps.Select(BoolToQuarterColour).Aggregate(string.Join));
+            builder.AppendLine(model.MinuteLamps.Select(BoolToMinorColour).Aggregate(string.Join));
 
             return builder.ToString();
         }
     }
 
-    internal readonly struct LampTimeModel
+    public readonly struct LampTimeModel
     {
         public bool SecondsAreEven { get; }
-        public IReadOnlyCollection<bool> FiveHourLamps { get; }
-        public IReadOnlyCollection<bool> HourLamps { get; }
-        public IReadOnlyCollection<bool> FiveMinuteLamps { get; }
-        public IReadOnlyCollection<bool> MinuteLamps { get; }
-
-        private readonly int _fiveHourLampCount;
+        public IEnumerable<bool> FiveHourLamps { get; }
+        public IEnumerable<bool> HourLamps { get; }
+        public IEnumerable<bool> FiveMinuteLamps { get; }
+        public IEnumerable<bool> MinuteLamps { get; }
 
         public LampTimeModel(bool secondsAreEven, ICollection<bool> fiveHourLamps, ICollection<bool> hourLamps,
             ICollection<bool> fiveMinuteLamps, ICollection<bool> minuteLamps)
