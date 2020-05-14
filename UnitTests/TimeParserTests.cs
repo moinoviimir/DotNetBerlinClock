@@ -2,10 +2,7 @@
 using BerlinClock.Classes.TimeParser;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FluentAssertions;
 
 namespace BerlinClock.UnitTests
 {
@@ -47,31 +44,15 @@ namespace BerlinClock.UnitTests
             private static readonly LampTimeModel TestResult = new LampTimeModel(
                 false,
                 new[] { true, false, false, false },
-                new[] { false, false, false, false },
+                new[] { true, false, false, false },
                 new[] { true, true, false, false, false, false, false, false, false, false, false },
-                new[] { false, false, false, false }
+                new[] { true, false, false, false }
             );
 
             [TestMethod]
             public void ReturnsResult_OnValidTimestamp()
             {
-                Assert.AreEqual(TestResult, _sut.Parse("04:10:01"));
-            }
-
-            private class LampTimeModelEqualityComparer : IEqualityComparer<LampTimeModel>
-            {
-                public bool Equals(LampTimeModel x, LampTimeModel y)
-                {
-                    if ((x == null && y != null) || (x != null && y == null))
-                        return false;
-                    return false;
-                    //return x.SecondsAreEven == y.SecondsAreEven && Assert.SequenceEquals
-                }
-
-                public int GetHashCode(LampTimeModel obj)
-                {
-                    throw new NotImplementedException();
-                }
+                _sut.Parse("06:11:01").Should().BeEquivalentTo(TestResult);
             }
         }
     }
