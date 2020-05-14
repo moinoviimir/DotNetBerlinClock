@@ -27,3 +27,11 @@ Quality attributes obviously depend heavily on usage; because we have no technic
 - There will be two component boundaries within the application, and all unit tests will run against those boundaries: the `TimeParser` component, and the `ColourMapper` component.
 - I will not use `Span<T>` et al in the solution, in the interest of maintainability, because performance gains are irrelevant for us due to the established quality metric for Performance.
 - Although we deal with the date-and-time domain here, no part of our behaviour is in fact in need of time-specific knowledge; as such, `NodaTime` is not required to manage time information.
+
+## Quality
+
+BDD is foundationally business-specific, but can be also be practiced to describe software component behaviour. As I'm not sure what exactly is practiced and it would be arrogant of me to assume, I'll write standard unit tests to verify the behaviour against component boundaries.
+
+## Misc notes
+
+I've taken the liberty of adjusting things where they didn't change the intent or behaviour of the project, such as swapping argument order in `Assert.AreEqual` (`expected` goes first, rather than the result, to avoid confusion with test runner output). As `MsTest1` has a difficult time working with parameterized tests, I've written them explicitly, with duplicated code.
