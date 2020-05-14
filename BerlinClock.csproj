@@ -65,7 +65,7 @@
   <ItemGroup>
     <Compile Include="BDD\BerlinClockFeatureSteps.cs" />
     <Compile Include="Classes\ColourMapper\DefaultColourMapper.cs" />
-    <Compile Include="Classes\ColourMapper\IColourMapper.cs" />
+    <Compile Include="Classes\ColourMapper\ColourMapperBase.cs" />
     <Compile Include="Classes\TimeParser\ITimeParser.cs" />
     <Compile Include="Classes\LampTimeModel.cs" />
     <Compile Include="Classes\TimeParser\TimeParser.cs" />
@@ -77,6 +77,7 @@
     </Compile>
     <Compile Include="Classes\ITimeConverter.cs" />
     <Compile Include="Classes\TimeConverter.cs" />
+    <Compile Include="UnitTests\DefaultColourMapperTests.cs" />
     <Compile Include="UnitTests\TimeParserTests.cs" />
   </ItemGroup>
   <ItemGroup>

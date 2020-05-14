@@ -6,7 +6,7 @@ namespace BerlinClock
     public class TimeConverter : ITimeConverter
     {
         private readonly ITimeParser _timeParser;
-        private readonly IColourMapper _colourMapper;
+        private readonly ColourMapperBase _colourMapper;
 
         public TimeConverter()
         {
